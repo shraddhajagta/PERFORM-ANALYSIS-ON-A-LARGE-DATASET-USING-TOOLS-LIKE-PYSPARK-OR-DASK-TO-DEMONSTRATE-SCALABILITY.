@@ -1,0 +1,60 @@
+
+# pip install textblob transformers pandas matplotlib
+
+import pandas as pd
+from textblob import TextBlob
+import matplotlib.pyplot as plt
+from transformers import pipeline
+data = {
+    "text": [
+        "I love this product! It's amazing.",
+        "This is the worst service I've ever experienced.",
+        "The food was decent, nothing extraordinary.",
+        "Absolutely fantastic! Will buy again.",
+        "I'm not happy with this purchase, it was a waste of money."
+    ]
+}
+
+df = pd.DataFrame(data)
+
+def get_sentiment(text):
+    blob = TextBlob(text)
+    polarity = blob.sentiment.polarity
+    subjectivity = blob.sentiment.subjectivity
+    return polarity, subjectivity
+
+df['polarity'], df['subjectivity'] = zip(*df['text'].apply(get_sentiment))
+
+df['sentiment'] = df['polarity'].apply(lambda x: 'Positive' if x > 0 else ('Negative' if x < 0 else 'Neutral'))
+
+plt.figure(figsize=(8,6))
+df['sentiment'].value_counts().plot(kind='bar', color=['green', 'gray', 'red'])
+plt.title('Sentiment Distribution (TextBlob)')
+plt.xlabel('Sentiment')
+plt.ylabel('Count')
+plt.xticks(rotation=0)
+plt.show()
+sentiment_pipeline = pipeline("sentiment-analysis")
+
+texts = [
+    "I love this product! It's amazing.",
+    "This is the worst service I've ever experienced.",
+    "The food was decent, nothing extraordinary.",
+    "Absolutely fantastic! Will buy again.",
+    "I'm not happy with this purchase, it was a waste of money."
+]
+
+results = sentiment_pipeline(texts)
+for text, result in zip(texts, results):
+    print(f"Text: {text}")
+    print(f"Sentiment: {result['label']}, Confidence Score: {result['score']:.2f}")
+    print("-" * 80)
+
+bert_labels = [result['label'] for result in results]
+plt.figure(figsize=(8,6))
+pd.Series(bert_labels).value_counts().plot(kind='bar', color=['green', 'red'])
+plt.title('Sentiment Distribution (BERT)')
+plt.xlabel('Sentiment')
+plt.ylabel('Count')
+plt.xticks(rotation=0)
+plt.show()
