@@ -1,0 +1,46 @@
+import dash
+from dash import dcc, html
+import plotly.express as px
+import pandas as pd
+df = pd.read_csv("transactions.csv")
+customer_transactions = df.groupby("customer_id")["transaction_id"].count().reset_index()
+customer_transactions.columns = ["Customer ID", "Total Transactions"]
+
+customer_spending = df.groupby("customer_id")["amount"].sum().reset_index()
+customer_spending.columns = ["Customer ID", "Total Spending"]
+
+category_avg = df.groupby("category")["amount"].mean().reset_index()
+category_avg.columns = ["Category", "Average Amount"]
+
+app = dash.Dash(_name_)
+
+fig_transactions = px.bar(customer_transactions, x="Customer ID", y="Total Transactions",
+                          title="Total Transactions per Customer", color="Total Transactions")
+
+fig_spending = px.bar(customer_spending, x="Customer ID", y="Total Spending",
+                      title="Total Spending per Customer", color="Total Spending")
+
+fig_category_avg = px.bar(category_avg, x="Category", y="Average Amount",
+                          title="Average Spending per Category", color="Average Amount")
+
+app.layout = html.Div(children=[
+    html.H1("Customer Transaction Dashboard", style={'text-align': 'center'}),
+    
+    html.Div(children=[
+        html.H3("Total Transactions per Customer"),
+        dcc.Graph(figure=fig_transactions),
+    ]),
+    
+    html.Div(children=[
+        html.H3("Total Spending per Customer"),
+        dcc.Graph(figure=fig_spending),
+    ]),
+
+    html.Div(children=[
+        html.H3("Average Transaction Amount per Category"),
+        dcc.Graph(figure=fig_category_avg),
+    ])
+])
+
+if _name_ == '_main_':
+    app.run_server(debug=True)
